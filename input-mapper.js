@@ -9,6 +9,40 @@ const validInput = [
     'RTRIG','Z','ZTRIG','CENTERCAM',
 ];
 
+const FalloutInput = [
+    'A',
+    'C',
+    'I',
+    'P',
+    'Z',
+    'O',
+    'B',
+    'M',
+    'N',
+    'S',
+    '1',
+    '2',
+    '3',
+    '4',
+    '5',
+    '6',
+    '7',
+    '8',
+    '?',
+    '<',
+    '>',
+    'SPACE',
+    'ENTER',
+    'TAB',
+    'HOME',
+    'END',
+    'PGUP',
+    'PGDN',
+    'HELP',
+    'SAVE',
+    'LOAD',
+]
+
 const controllerStates = {
     connected : {
         1: true,
@@ -294,59 +328,68 @@ async function inputMapper(key, modifier, author, player) {
     switch (inputToUpperCase) {
 
         // KEYBOARD & GAMEPAD EVENTS
-        case 'U': 
-        case 'UP': 
-            logInput(key, author, player);
-            holdInput(REF.INPUT[accessor].UP, modifier);
-            break;
-        case 'D':
-        case 'DN':
-        case 'DOWN':
-            logInput(key, author, player);
-            holdInput(REF.INPUT[accessor].DOWN, modifier);
-            break;
-        case 'L':
-        case 'LEFT':
-            logInput(key, author, player);
-            holdInput(REF.INPUT[accessor].LEFT, modifier);
-            break;
-        case 'R':
-        case 'RIGHT':
-            logInput(key, author, player);
-            holdInput(REF.INPUT[accessor].RIGHT, modifier);
-            break;
+        // case 'U': 
+        // case 'UP': 
+        //     logInput(key, author, player);
+        //     holdInput(REF.INPUT[accessor].UP, modifier);
+        //     break;
+        // case 'D':
+        // case 'DN':
+        // case 'DOWN':
+        //     logInput(key, author, player);
+        //     holdInput(REF.INPUT[accessor].DOWN, modifier);
+        //     break;
+        // case 'L':
+        // case 'LEFT':
+        //     logInput(key, author, player);
+        //     holdInput(REF.INPUT[accessor].LEFT, modifier);
+        //     break;
+        // case 'R':
+        // case 'RIGHT':
+        //     logInput(key, author, player);
+        //     holdInput(REF.INPUT[accessor].RIGHT, modifier);
+        //     break;
+        // case 'A':
+        //     logInput(key, author, player);
+        //     tapOrRepititiveTapInput(REF.INPUT[accessor].A, modifier);
+        //     break;
+        // case 'B':
+        //     logInput(key, author, player);
+        //     tapOrRepititiveTapInput(REF.INPUT[accessor].B, modifier);
+        //     break;
+        // case 'X':
+        //     logInput(key, author, player);
+        //     tapOrRepititiveTapInput(REF.INPUT[accessor].X, modifier);
+        //     break;
+        // case 'Y':
+        //     logInput(key, author, player);
+        //     tapOrRepititiveTapInput(REF.INPUT[accessor].Y, modifier);
+        //     break;
+        // case 'START':
+        //     logInput(key, author, player);
+        //     tapOrRepititiveTapInput(REF.INPUT[accessor].START, modifier);
+        //     break;
+        // case 'SELECT':
+        //     logInput(key, author, player);
+        //     tapOrRepititiveTapInput(REF.INPUT[accessor].SELECT, modifier);
+        //     break;
+        // case 'LTRIG':
+        //     logInput(key, author, player);
+        //     tapOrRepititiveTapInput(REF.INPUT[accessor].LTRIG, modifier);
+        //     break;
+        // case 'RTRIG':
+        //     logInput(key, author, player);
+        //     tapOrRepititiveTapInput(REF.INPUT[accessor].RTRIG, modifier);
+        //     break;
+        
+        // FALLOUT SPECIFIC
         case 'A':
-            logInput(key, author, player);
+        case 'ATTACK':
             tapOrRepititiveTapInput(REF.INPUT[accessor].A, modifier);
-            break;
-        case 'B':
-            logInput(key, author, player);
-            tapOrRepititiveTapInput(REF.INPUT[accessor].B, modifier);
-            break;
-        case 'X':
-            logInput(key, author, player);
-            tapOrRepititiveTapInput(REF.INPUT[accessor].X, modifier);
-            break;
-        case 'Y':
-            logInput(key, author, player);
-            tapOrRepititiveTapInput(REF.INPUT[accessor].Y, modifier);
-            break;
-        case 'START':
-            logInput(key, author, player);
-            tapOrRepititiveTapInput(REF.INPUT[accessor].START, modifier);
-            break;
-        case 'SELECT':
-            logInput(key, author, player);
-            tapOrRepititiveTapInput(REF.INPUT[accessor].SELECT, modifier);
-            break;
-        case 'LTRIG':
-            logInput(key, author, player);
-            tapOrRepititiveTapInput(REF.INPUT[accessor].LTRIG, modifier);
-            break;
-        case 'RTRIG':
-            logInput(key, author, player);
-            tapOrRepititiveTapInput(REF.INPUT[accessor].RTRIG, modifier);
-            break;
+        case 'C':
+        case 'CHARACTER':
+            tapOrRepititiveTapInput(REF.INPUT[accessor].C, modifier);
+
         
         // MOUSE CURSOR EVENTS
         case 'MOUSE LEFT':
