@@ -159,6 +159,120 @@ function comboInput(keys, author, accessor) {
 }
 
 /**
+ * Emit cursor move events
+ * 
+ * @param {string} defaultMoveDirection Which way to move the cursor, accpets UP, DOWN, LEFT, RIGHT
+ * @param {number} shouldClick - Whether to click, accepts LCLICK or RCLICK
+ */
+ async function moveMouse(defaultMoveDirection, shouldClick) {
+     const currentMousePosition = robot.getMousePos();
+     const defaultMoveAmount = 100; // 100 pixels
+
+    switch (defaultMoveDirection) {
+        case 'UP':
+            robot.moveMouseSmooth(currentMousePosition.x, (currentMousePosition.y + defaultMoveAmount));
+            break;
+        case 'DOWN':
+            robot.moveMouseSmooth(currentMousePosition.x, (currentMousePosition.y - defaultMoveAmount));
+            break;
+        case 'LEFT':
+            robot.moveMouseSmooth((currentMousePosition.x - defaultMoveAmount), currentMousePosition.y);
+            break;
+        case 'RIGHT':
+            robot.moveMouseSmooth((currentMousePosition.x + defaultMoveAmount), currentMousePosition.y);
+            break;
+   }
+
+    if (shouldClick) {
+        mouseClick(shouldClick, true)
+    }
+
+    return Promise.resolve();
+}
+
+// function handleMouseBorders(x, y) {
+//     const windowBorders = {
+//         width: process.env.WINDOW_WIDTH,
+//         height: process.env.WINDOW_HEIGHT
+//     }
+
+//     const currentMousePosition = robot.getMousePos();
+//     console.log("borders: %s, %s"+ windowBorders.width, windowBorders.height)
+    
+//     console.log("current mouse: %s, %s"+ currentMousePosition.x, currentMousePosition.y)
+//     if (currentMousePosition.x + x > windowBorders.width) {
+//         console.log("me move!")
+//         return robot.moveMouseSmooth(windowBorders.width, 0)
+//     }
+//     if (currentMousePosition.y + y > windowBorders.height) {
+//         console.log("me also move")
+//         return robot.moveMouseSmooth(0, windowBorders.height)
+//     }
+//     console.log("me too move")
+//     return robot.moveMouseSmooth(x, y);
+// }
+
+/**
+ * Emit scroll events, usually used to move the viewport
+ * 
+ * @param {string} horizontalOrVertical Which way to scroll, accepts HORIZONTAL and VERTICAL
+ * @param {number} amount how many pixels to scroll, negative values are LEFT or DOWN, positive values are RIGHT or UP
+ */
+async function mouseScroll(horizontalOrVertical, amount) {
+    switch (horizontalOrVertical) {
+        case 'HORIZONTAL':
+            if (amount < 0) {
+                robot.scrollMouse(-200, 0);
+            } else {
+                //scroll right
+                robot.scrollMouse(200, 0);
+            }
+        case 'VERTICAL':
+            if (amount < 0) {
+                //scroll down
+                robot.scrollMouse(0, -200);
+            } else {
+                //scroll up
+                robot.scrollMouse(0, 200);
+            }
+    }
+    return Promise.resolve();
+}
+
+/**
+ * Emit mouse click events
+ * 
+ * @param {string} button Which mouse button to click, accepts LCLICK, MCLICK, RCLICK
+ * @param {boolean} double Whether to double-click
+ */
+async function mouseClick(button, double) {
+    if (button == 'LCLICK') {
+        handleClick('left', double)
+    } else if (button == 'MCLICK') {
+        handleClick('middle', double)
+    } else {
+        handleClick('right', double)
+    }
+}
+
+function handleClick(button, double) {
+    if (double) {
+        for (let i = 0; i < 2; i++ ) {
+            robot.mouseToggle('down', button);
+            setTimeout(function() {
+                robot.mouseToggle("up");
+            }, 100);
+        }
+    } else {
+        robot.mouseToggle('down', button);
+        setTimeout(function() {
+            robot.mouseToggle("up");
+        }, 100);
+    }
+
+}
+
+/**
  * Emits keyboard events, or redirects to child functions to emit
  * more complex keyboard events.
  * 
@@ -167,7 +281,7 @@ function comboInput(keys, author, accessor) {
  * @param {string|null} author author of the action
  * @param {integer} player controller position
  */
-function inputMapper(key, modifier, author, player) {
+async function inputMapper(key, modifier, author, player) {
 
     const accessor = 'CONTROLLER_' + player;
 
@@ -178,6 +292,8 @@ function inputMapper(key, modifier, author, player) {
     };
     const inputToUpperCase = key.toUpperCase();
     switch (inputToUpperCase) {
+
+        // KEYBOARD & GAMEPAD EVENTS
         case 'U': 
         case 'UP': 
             logInput(key, author, player);
@@ -231,6 +347,101 @@ function inputMapper(key, modifier, author, player) {
             logInput(key, author, player);
             tapOrRepititiveTapInput(REF.INPUT[accessor].RTRIG, modifier);
             break;
+        
+        // MOUSE CURSOR EVENTS
+        case 'MOUSE LEFT':
+        case 'POINTER LEFT':
+        case 'CURSOR LEFT':
+        case 'MOUSELEFT':
+        case 'MSL':
+            logInput(key, author, player);
+            await moveMouse('LEFT');
+            break;
+        case 'MOUSE RIGHT':
+        case 'POINTER RIGHT':
+        case 'CURSOR RIGHT':
+        case 'MOUSERIGHT':
+        case 'MSR':
+            logInput(key, author, player);
+            await moveMouse('RIGHT');
+            break;
+        case 'MOUSE UP':
+        case 'POINTER UP':
+        case 'CURSOR UP':
+        case 'MOUSEUP':
+        case 'MSU':
+            logInput(key, author, player);
+            await moveMouse('UP');
+            break;
+        case 'MOUSE DOWN':
+        case 'POINTER DOWN':
+        case 'CURSOR DOWN':
+        case 'MOUSEDOWN':
+        case 'MSD':
+            logInput(key, author, player);
+            await moveMouse('DOWN');
+            break;
+        
+        // MOUSE MOVE EVENTS (RPGs where point & click to move)
+        case 'MOVE LEFT':
+        case 'MVL':
+            logInput(key, author, player);
+            moveMouse('LEFT', 'LCLICK');
+            break;
+        case 'MOVE RIGHT':
+        case 'MVR':
+            logInput(key, author, player);
+            moveMouse('RIGHT', 'LCLICK');
+            break;
+        case 'MOVE UP':
+        case 'MVU':
+            logInput(key, author, player);
+            moveMouse('UP', 'LCLICK');
+            break;
+        case 'MOVE DOWN':
+        case 'MVD':
+            logInput(key, author, player);
+            moveMouse('DOWN', 'LCLICK');
+            break;
+        
+        // MOUSE CLICKS
+        case 'LEFT CLICK':
+        case 'L CLICK':
+        case 'LCLICK':
+        case 'LCL':
+            mouseClick('LCLICK', false);
+            break;
+        case 'RIGHT CLICK':
+        case 'R CLICK':
+        case 'RCLICK':
+        case 'RCL':
+            mouseClick('RCLICK', false);
+            break;
+        
+
+        // SCROLL EVENTS
+        case 'SCROLL LEFT':
+        case 'SCRLL':
+            logInput(key, author, player);
+            mouseScroll('HORIZONTAL', -1);
+            break;
+        case 'SCROLL RIGHT':
+            case 'SCRLR':
+            logInput(key, author, player);
+            mouseScroll('HORIZONTAL', 1);
+            break;
+        case 'SCROLL UP':
+        case 'SCRLU':
+            logInput(key, author, player);
+            mouseScroll('VERTICAL', 1);
+            break;
+        case 'SCROLL DOWN':
+        case 'SCRLD':
+            logInput(key, author, player);
+            mouseScroll('VERTICAL', -1);
+            break;
+
+
         case 'Z':
         case 'ZTRIG':
             break;
@@ -257,6 +468,8 @@ function inputMapper(key, modifier, author, player) {
         default:
             break;
     }
+
+    return Promise.resolve();
 }
 
 /**
@@ -314,7 +527,15 @@ function translateInput(key, author, player) {
 /**
  * Use to debug input functions
  */
-// const sampleInput1 = [
+const sampleInput1 = [
+    'MVL',
+    'MVU',
+    'MVR',
+    'MVD',
+    'SCRLL',
+    'SCRLU',
+    'SCRLD',
+    'SCRLR',
 //     'DOWN+LEFT+X',
 //     'down+right+x',
 //     'UP15',
@@ -333,7 +554,7 @@ function translateInput(key, author, player) {
 //     'down+right+x',
 //     'START6',
 //     'dad'
-// ];
+];
 
 // const sampleInput2 = [
 //     'UP15',
@@ -369,14 +590,18 @@ function translateInput(key, author, player) {
 //     'down+right+x',
 // ];
 
-// setTimeout(function(){
-//     sampleInput1.forEach(
-//         (el, i) => {
-//             translateInput(el, 'INPUT-1', 1);
-//             translateInput(sampleInput2[i], 'INPUT-2', 2);
-//         }
-//     );
-// }, 2000);
+setTimeout(function(){
+    // sampleInput1.forEach(
+    //     (el, i) => {
+    //         translateInput(el, 'INPUT-1', 1).then(translateInput(sampleInput2[i], 'INPUT-2', 2))
+    //     }
+    // );
+    sampleInput1.forEach(
+        (el, i) => {
+            translateInput(el, 'INPUT-1', 1)
+        }
+    );
+}, 2000);
 
 module.exports = { 
     translateInput 
