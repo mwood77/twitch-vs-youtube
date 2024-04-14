@@ -1,5 +1,6 @@
 const robot = require("robotjs");
-const REF = require('./resources/input-map');
+// const REF = require('./resources/input-map');
+const REF = require('./resources/fallout-map');
 const WebSocket = require('ws');
 const ws = new WebSocket('ws://localhost:8070/1');
 
@@ -117,7 +118,7 @@ function tapOrRepititiveTapInput(action, modifier) {
  * @returns {array} an array of allow listed inputs
  */
 function sanitizeInput(keys, accessor) {
-    const sanitized = keys.flatMap(el => validInput.filter(v => v === el.toUpperCase()));
+    const sanitized = keys.flatMap(el => validInput.concat(FalloutInput).filter(v => v === el.toUpperCase()));
     const sanitizedWithoutNumbers = sanitized.filter(el => findNumberAtIndex(el) < 0);
 
     return sanitizedWithoutNumbers.flatMap(el => REF.INPUT[accessor][el.toUpperCase()]);
@@ -385,11 +386,111 @@ async function inputMapper(key, modifier, author, player) {
         // FALLOUT SPECIFIC
         case 'A':
         case 'ATTACK':
+            logInput(key, author, player);
             tapOrRepititiveTapInput(REF.INPUT[accessor].A, modifier);
         case 'C':
         case 'CHARACTER':
+            logInput(key, author, player);
             tapOrRepititiveTapInput(REF.INPUT[accessor].C, modifier);
-
+        case 'I':
+        case 'INVENTORY':
+            logInput(key, author, player);
+            tapOrRepititiveTapInput(REF.INPUT[accessor].I, modifier);
+        case 'P':
+        case 'PIP':
+        case 'PIPBOY':
+        case 'PIPBOY2000':
+            logInput(key, author, player);
+            tapOrRepititiveTapInput(REF.INPUT[accessor].P, modifier);
+        case 'Z':
+            logInput(key, author, player);
+            tapOrRepititiveTapInput(REF.INPUT[accessor].Z, modifier);
+        case 'OPTIONS':
+            logInput(key, author, player);
+            tapOrRepititiveTapInput(REF.INPUT[accessor].O, modifier);
+        case 'ACTIVE':
+            logInput(key, author, player);
+            tapOrRepititiveTapInput(REF.INPUT[accessor].B, modifier);
+        case 'TOGGLE_MOUSE':
+            logInput(key, author, player);
+            tapOrRepititiveTapInput(REF.INPUT[accessor].M, modifier);
+        case 'TOGGLE_ITEM':
+            logInput(key, author, player);
+            tapOrRepititiveTapInput(REF.INPUT[accessor].N, modifier);
+        case 'S':
+        case 'SKILL':
+        case 'SKILLS':
+        case 'SKILLDEX':
+            logInput(key, author, player);
+            tapOrRepititiveTapInput(REF.INPUT[accessor].S, modifier);
+        case '1':
+        case 'SNEAK':
+            logInput(key, author, player);
+            tapOrRepititiveTapInput(REF.INPUT[accessor].ONE, modifier);
+        case '2':
+        case 'LOCK':
+        case 'LOCKPICK':
+        case 'PICK':
+            logInput(key, author, player);
+            tapOrRepititiveTapInput(REF.INPUT[accessor].TWO, modifier);
+        case '3':
+        case 'STEAL':
+            logInput(key, author, player);
+            tapOrRepititiveTapInput(REF.INPUT[accessor].THREE, modifier);
+        case '4':
+        case 'TRAP':
+            logInput(key, author, player);
+            tapOrRepititiveTapInput(REF.INPUT[accessor].FOUR, modifier);
+        case '5':
+        case 'AID':
+        case 'STIM':
+        case 'STIMPACK':
+            logInput(key, author, player);
+            tapOrRepititiveTapInput(REF.INPUT[accessor].FIVE, modifier);
+        case '6':
+        case 'DR':
+        case 'DOCTOR':
+            logInput(key, author, player);
+            tapOrRepititiveTapInput(REF.INPUT[accessor].SIX, modifier);
+        case '7':
+        case 'SCIENCE':
+            logInput(key, author, player);
+            tapOrRepititiveTapInput(REF.INPUT[accessor].SEVEN, modifier);
+        case '8':
+        case 'FIX':
+        case 'REPAIR':
+            logInput(key, author, player);
+            tapOrRepititiveTapInput(REF.INPUT[accessor].EIGHT, modifier);
+        case '?':
+        case 'TIME':
+        case 'CLOCK':
+            logInput(key, author, player);
+            tapOrRepititiveTapInput(REF.INPUT[accessor].TIME, modifier);
+        case '<':
+        case 'ROTATE':
+            logInput(key, author, player);
+            tapOrRepititiveTapInput(REF.INPUT[accessor].ROTATE, modifier);
+        case 'SPACE':
+        case 'END':
+            logInput(key, author, player);
+            tapOrRepititiveTapInput(REF.INPUT[accessor].SPACE, modifier);
+        case 'ENTER':
+        case 'DONE':
+            logInput(key, author, player);
+            tapOrRepititiveTapInput(REF.INPUT[accessor].ENTER, modifier);
+        case 'TAB':
+        case 'MAP':
+            logInput(key, author, player);
+            tapOrRepititiveTapInput(REF.INPUT[accessor].TAB, modifier);
+        case 'HELP':
+            logInput(key, author, player);
+            tapOrRepititiveTapInput(REF.INPUT[accessor].HELP, modifier);
+        case 'SAVE':
+            logInput(key, author, player);
+            tapOrRepititiveTapInput(REF.INPUT[accessor].SAVE, modifier);
+        case 'LOAD':
+            logInput(key, author, player);
+            tapOrRepititiveTapInput(REF.INPUT[accessor].LOAD, modifier);
         
         // MOUSE CURSOR EVENTS
         case 'MOUSE LEFT':
@@ -459,8 +560,7 @@ async function inputMapper(key, modifier, author, player) {
         case 'RCLICK':
         case 'RCL':
             mouseClick('RCLICK', false);
-            break;
-        
+            break;    
 
         // SCROLL EVENTS
         case 'SCROLL LEFT':
@@ -484,20 +584,6 @@ async function inputMapper(key, modifier, author, player) {
             mouseScroll('VERTICAL', -1);
             break;
 
-
-        case 'Z':
-        case 'ZTRIG':
-            break;
-            // logInput(key, author, player);
-            // tapOrRepititiveTapInput(key, modifier);
-            // break;
-        case 'CC':
-        case 'CENTERCAM':
-            break;
-            // Super Mario 64 Specific
-            // logInput('centering camera', author, player);
-            // centerCamera(['u', 'j']); // [0] = zoom in, [1] = zoom out
-            // break;
         case 'QUIT-IT':
         case 'IM-CALLING-MOM':
         case 'STOP-IT':
@@ -570,15 +656,7 @@ function translateInput(key, author, player) {
 /**
  * Use to debug input functions
  */
-const sampleInput1 = [
-    'MVL',
-    'MVU',
-    'MVR',
-    'MVD',
-    'SCRLL',
-    'SCRLU',
-    'SCRLD',
-    'SCRLR',
+// const sampleInput1 = [
 //     'DOWN+LEFT+X',
 //     'down+right+x',
 //     'UP15',
@@ -597,7 +675,7 @@ const sampleInput1 = [
 //     'down+right+x',
 //     'START6',
 //     'dad'
-];
+// ];
 
 // const sampleInput2 = [
 //     'UP15',
@@ -633,18 +711,14 @@ const sampleInput1 = [
 //     'down+right+x',
 // ];
 
-setTimeout(function(){
-    // sampleInput1.forEach(
-    //     (el, i) => {
-    //         translateInput(el, 'INPUT-1', 1).then(translateInput(sampleInput2[i], 'INPUT-2', 2))
-    //     }
-    // );
-    sampleInput1.forEach(
-        (el, i) => {
-            translateInput(el, 'INPUT-1', 1)
-        }
-    );
-}, 2000);
+// setTimeout(function(){
+//     sampleInput1.forEach(
+//         (el, i) => {
+//             translateInput(el, 'INPUT-1', 1);
+//             translateInput(sampleInput2[i], 'INPUT-2', 2);
+//         }
+//     );
+// }, 2000);
 
 module.exports = { 
     translateInput 
