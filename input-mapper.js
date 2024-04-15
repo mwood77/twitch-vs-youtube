@@ -199,16 +199,16 @@ function comboInput(keys, author, accessor) {
  * @param {string} defaultMoveDirection Which way to move the cursor, accpets UP, DOWN, LEFT, RIGHT
  * @param {number} shouldClick - Whether to click, accepts LCLICK or RCLICK
  */
- async function moveMouse(defaultMoveDirection, shouldClick) {
+ function moveMouse({ DIR: defaultMoveDirection, PRESCISION: precision }, shouldClick) {
      const currentMousePosition = robot.getMousePos();
-     const defaultMoveAmount = 100; // 100 pixels
+     const defaultMoveAmount = precision == true ? 20 : 100; // 100 or 10 pixels
 
     switch (defaultMoveDirection) {
         case 'UP':
-            robot.moveMouseSmooth(currentMousePosition.x, (currentMousePosition.y + defaultMoveAmount));
+            robot.moveMouseSmooth(currentMousePosition.x, (currentMousePosition.y - defaultMoveAmount));
             break;
         case 'DOWN':
-            robot.moveMouseSmooth(currentMousePosition.x, (currentMousePosition.y - defaultMoveAmount));
+            robot.moveMouseSmooth(currentMousePosition.x, (currentMousePosition.y + defaultMoveAmount));
             break;
         case 'LEFT':
             robot.moveMouseSmooth((currentMousePosition.x - defaultMoveAmount), currentMousePosition.y);
@@ -253,7 +253,7 @@ function comboInput(keys, author, accessor) {
  * @param {string} horizontalOrVertical Which way to scroll, accepts HORIZONTAL and VERTICAL
  * @param {number} amount how many pixels to scroll, negative values are LEFT or DOWN, positive values are RIGHT or UP
  */
-async function mouseScroll(horizontalOrVertical, amount) {
+function mouseScroll(horizontalOrVertical, amount) {
     switch (horizontalOrVertical) {
         case 'HORIZONTAL':
             if (amount < 0) {
@@ -271,7 +271,6 @@ async function mouseScroll(horizontalOrVertical, amount) {
                 robot.scrollMouse(0, 200);
             }
     }
-    return Promise.resolve();
 }
 
 /**
@@ -280,12 +279,14 @@ async function mouseScroll(horizontalOrVertical, amount) {
  * @param {string} button Which mouse button to click, accepts LCLICK, MCLICK, RCLICK
  * @param {boolean} double Whether to double-click
  */
-async function mouseClick(button, double) {
+function mouseClick(button, double) {
     if (button == 'LCLICK') {
         handleClick('left', double)
-    } else if (button == 'MCLICK') {
+    } 
+    if (button == 'MCLICK') {
         handleClick('middle', double)
-    } else {
+    } 
+    if (button == 'RCLICK') {
         handleClick('right', double)
     }
 }
@@ -295,16 +296,17 @@ function handleClick(button, double) {
         for (let i = 0; i < 2; i++ ) {
             robot.mouseToggle('down', button);
             setTimeout(function() {
-                robot.mouseToggle("up");
+                robot.mouseToggle('up', button);
             }, 100);
         }
     } else {
+        robot.mouseToggle('up');
         robot.mouseToggle('down', button);
         setTimeout(function() {
-            robot.mouseToggle("up");
-        }, 100);
+            console.log('toggle up');
+            robot.mouseToggle('up', button);
+        }, 60);
     }
-
 }
 
 /**
@@ -316,289 +318,28 @@ function handleClick(button, double) {
  * @param {string|null} author author of the action
  * @param {integer} player controller position
  */
-async function inputMapper(key, modifier, author, player) {
+function inputMapper(key, modifier, author, player) {
 
-    const accessor = 'CONTROLLER_' + player;
+    let queuedInput = [];
 
     if (!controllerStates.connected[player] && Date.now() < controllerStates.time + 7000) return;
 
     if(key.includes('+')) {
-        comboInput(key.split('+'), author, accessor);
+        if (process.env.COMBOS) {
+            comboInput(key.split('+'), author, accessor);
+        }
+
+        key.split('+').forEach(k => queuedInput.push(k));
+        queuedInput.forEach(async (e,i) => {
+            await actionKey(e, modifier, author, player);
+
+        })
+
+        queuedInput.length = 0;
     };
-    const inputToUpperCase = key.toUpperCase();
-    switch (inputToUpperCase) {
 
-        // KEYBOARD & GAMEPAD EVENTS
-        // case 'U': 
-        // case 'UP': 
-        //     logInput(key, author, player);
-        //     holdInput(REF.INPUT[accessor].UP, modifier);
-        //     break;
-        // case 'D':
-        // case 'DN':
-        // case 'DOWN':
-        //     logInput(key, author, player);
-        //     holdInput(REF.INPUT[accessor].DOWN, modifier);
-        //     break;
-        // case 'L':
-        // case 'LEFT':
-        //     logInput(key, author, player);
-        //     holdInput(REF.INPUT[accessor].LEFT, modifier);
-        //     break;
-        // case 'R':
-        // case 'RIGHT':
-        //     logInput(key, author, player);
-        //     holdInput(REF.INPUT[accessor].RIGHT, modifier);
-        //     break;
-        // case 'A':
-        //     logInput(key, author, player);
-        //     tapOrRepititiveTapInput(REF.INPUT[accessor].A, modifier);
-        //     break;
-        // case 'B':
-        //     logInput(key, author, player);
-        //     tapOrRepititiveTapInput(REF.INPUT[accessor].B, modifier);
-        //     break;
-        // case 'X':
-        //     logInput(key, author, player);
-        //     tapOrRepititiveTapInput(REF.INPUT[accessor].X, modifier);
-        //     break;
-        // case 'Y':
-        //     logInput(key, author, player);
-        //     tapOrRepititiveTapInput(REF.INPUT[accessor].Y, modifier);
-        //     break;
-        // case 'START':
-        //     logInput(key, author, player);
-        //     tapOrRepititiveTapInput(REF.INPUT[accessor].START, modifier);
-        //     break;
-        // case 'SELECT':
-        //     logInput(key, author, player);
-        //     tapOrRepititiveTapInput(REF.INPUT[accessor].SELECT, modifier);
-        //     break;
-        // case 'LTRIG':
-        //     logInput(key, author, player);
-        //     tapOrRepititiveTapInput(REF.INPUT[accessor].LTRIG, modifier);
-        //     break;
-        // case 'RTRIG':
-        //     logInput(key, author, player);
-        //     tapOrRepititiveTapInput(REF.INPUT[accessor].RTRIG, modifier);
-        //     break;
-        
-        // FALLOUT SPECIFIC
-        case 'A':
-        case 'ATTACK':
-            logInput(key, author, player);
-            tapOrRepititiveTapInput(REF.INPUT[accessor].A, modifier);
-        case 'C':
-        case 'CHARACTER':
-            logInput(key, author, player);
-            tapOrRepititiveTapInput(REF.INPUT[accessor].C, modifier);
-        case 'I':
-        case 'INVENTORY':
-            logInput(key, author, player);
-            tapOrRepititiveTapInput(REF.INPUT[accessor].I, modifier);
-        case 'P':
-        case 'PIP':
-        case 'PIPBOY':
-        case 'PIPBOY2000':
-            logInput(key, author, player);
-            tapOrRepititiveTapInput(REF.INPUT[accessor].P, modifier);
-        case 'Z':
-            logInput(key, author, player);
-            tapOrRepititiveTapInput(REF.INPUT[accessor].Z, modifier);
-        case 'OPTIONS':
-            logInput(key, author, player);
-            tapOrRepititiveTapInput(REF.INPUT[accessor].O, modifier);
-        case 'ACTIVE':
-            logInput(key, author, player);
-            tapOrRepititiveTapInput(REF.INPUT[accessor].B, modifier);
-        case 'TOGGLE_MOUSE':
-            logInput(key, author, player);
-            tapOrRepititiveTapInput(REF.INPUT[accessor].M, modifier);
-        case 'TOGGLE_ITEM':
-            logInput(key, author, player);
-            tapOrRepititiveTapInput(REF.INPUT[accessor].N, modifier);
-        case 'S':
-        case 'SKILL':
-        case 'SKILLS':
-        case 'SKILLDEX':
-            logInput(key, author, player);
-            tapOrRepititiveTapInput(REF.INPUT[accessor].S, modifier);
-        case '1':
-        case 'SNEAK':
-            logInput(key, author, player);
-            tapOrRepititiveTapInput(REF.INPUT[accessor].ONE, modifier);
-        case '2':
-        case 'LOCK':
-        case 'LOCKPICK':
-        case 'PICK':
-            logInput(key, author, player);
-            tapOrRepititiveTapInput(REF.INPUT[accessor].TWO, modifier);
-        case '3':
-        case 'STEAL':
-            logInput(key, author, player);
-            tapOrRepititiveTapInput(REF.INPUT[accessor].THREE, modifier);
-        case '4':
-        case 'TRAP':
-            logInput(key, author, player);
-            tapOrRepititiveTapInput(REF.INPUT[accessor].FOUR, modifier);
-        case '5':
-        case 'AID':
-        case 'STIM':
-        case 'STIMPACK':
-            logInput(key, author, player);
-            tapOrRepititiveTapInput(REF.INPUT[accessor].FIVE, modifier);
-        case '6':
-        case 'DR':
-        case 'DOCTOR':
-            logInput(key, author, player);
-            tapOrRepititiveTapInput(REF.INPUT[accessor].SIX, modifier);
-        case '7':
-        case 'SCIENCE':
-            logInput(key, author, player);
-            tapOrRepititiveTapInput(REF.INPUT[accessor].SEVEN, modifier);
-        case '8':
-        case 'FIX':
-        case 'REPAIR':
-            logInput(key, author, player);
-            tapOrRepititiveTapInput(REF.INPUT[accessor].EIGHT, modifier);
-        case '?':
-        case 'TIME':
-        case 'CLOCK':
-            logInput(key, author, player);
-            tapOrRepititiveTapInput(REF.INPUT[accessor].TIME, modifier);
-        case '<':
-        case 'ROTATE':
-            logInput(key, author, player);
-            tapOrRepititiveTapInput(REF.INPUT[accessor].ROTATE, modifier);
-        case 'SPACE':
-        case 'END':
-            logInput(key, author, player);
-            tapOrRepititiveTapInput(REF.INPUT[accessor].SPACE, modifier);
-        case 'ENTER':
-        case 'DONE':
-            logInput(key, author, player);
-            tapOrRepititiveTapInput(REF.INPUT[accessor].ENTER, modifier);
-        case 'TAB':
-        case 'MAP':
-            logInput(key, author, player);
-            tapOrRepititiveTapInput(REF.INPUT[accessor].TAB, modifier);
-        case 'HELP':
-            logInput(key, author, player);
-            tapOrRepititiveTapInput(REF.INPUT[accessor].HELP, modifier);
-        case 'SAVE':
-            logInput(key, author, player);
-            tapOrRepititiveTapInput(REF.INPUT[accessor].SAVE, modifier);
-        case 'LOAD':
-            logInput(key, author, player);
-            tapOrRepititiveTapInput(REF.INPUT[accessor].LOAD, modifier);
-        
-        // MOUSE CURSOR EVENTS
-        case 'MOUSE LEFT':
-        case 'POINTER LEFT':
-        case 'CURSOR LEFT':
-        case 'MOUSELEFT':
-        case 'MSL':
-            logInput(key, author, player);
-            await moveMouse('LEFT');
-            break;
-        case 'MOUSE RIGHT':
-        case 'POINTER RIGHT':
-        case 'CURSOR RIGHT':
-        case 'MOUSERIGHT':
-        case 'MSR':
-            logInput(key, author, player);
-            await moveMouse('RIGHT');
-            break;
-        case 'MOUSE UP':
-        case 'POINTER UP':
-        case 'CURSOR UP':
-        case 'MOUSEUP':
-        case 'MSU':
-            logInput(key, author, player);
-            await moveMouse('UP');
-            break;
-        case 'MOUSE DOWN':
-        case 'POINTER DOWN':
-        case 'CURSOR DOWN':
-        case 'MOUSEDOWN':
-        case 'MSD':
-            logInput(key, author, player);
-            await moveMouse('DOWN');
-            break;
-        
-        // MOUSE MOVE EVENTS (RPGs where point & click to move)
-        case 'MOVE LEFT':
-        case 'MVL':
-            logInput(key, author, player);
-            moveMouse('LEFT', 'LCLICK');
-            break;
-        case 'MOVE RIGHT':
-        case 'MVR':
-            logInput(key, author, player);
-            moveMouse('RIGHT', 'LCLICK');
-            break;
-        case 'MOVE UP':
-        case 'MVU':
-            logInput(key, author, player);
-            moveMouse('UP', 'LCLICK');
-            break;
-        case 'MOVE DOWN':
-        case 'MVD':
-            logInput(key, author, player);
-            moveMouse('DOWN', 'LCLICK');
-            break;
-        
-        // MOUSE CLICKS
-        case 'LEFT CLICK':
-        case 'L CLICK':
-        case 'LCLICK':
-        case 'LCL':
-            mouseClick('LCLICK', false);
-            break;
-        case 'RIGHT CLICK':
-        case 'R CLICK':
-        case 'RCLICK':
-        case 'RCL':
-            mouseClick('RCLICK', false);
-            break;    
+    actionKey(key, modifier, author, player);
 
-        // SCROLL EVENTS
-        case 'SCROLL LEFT':
-        case 'SCRLL':
-            logInput(key, author, player);
-            mouseScroll('HORIZONTAL', -1);
-            break;
-        case 'SCROLL RIGHT':
-            case 'SCRLR':
-            logInput(key, author, player);
-            mouseScroll('HORIZONTAL', 1);
-            break;
-        case 'SCROLL UP':
-        case 'SCRLU':
-            logInput(key, author, player);
-            mouseScroll('VERTICAL', 1);
-            break;
-        case 'SCROLL DOWN':
-        case 'SCRLD':
-            logInput(key, author, player);
-            mouseScroll('VERTICAL', -1);
-            break;
-
-        case 'QUIT-IT':
-        case 'IM-CALLING-MOM':
-        case 'STOP-IT':
-        case 'MOM':
-        case 'MOOOOOOOOOOM':
-            unplugController(player);
-            break;
-        case 'DAD':
-            logInput('ARE YA WINNIN\'? - 👨‍🦳')
-            break;
-        default:
-            break;
-    }
-
-    return Promise.resolve();
 }
 
 /**
@@ -653,10 +394,298 @@ function translateInput(key, author, player) {
     });
 }
 
+
+/**
+ * Emits keyboard/mouse events, or redirects to child functions to emit
+ * more complex keyboard events.
+ * 
+ * @param {string} key input to action
+ * @param {integer} modifier used to repeat or hold 
+ * @param {string|null} author author of the action
+ * @param {integer} player controller position
+ */
+async function actionKey(key, modifier, author, player) {
+    const accessor = 'CONTROLLER_' + player;
+
+    let inputToUpperCase = key.toUpperCase();
+    let shouldPrecision = false;
+
+    if (key.includes('precision')) {
+        shouldPrecision = true;
+        inputToUpperCase = key.split('precision')[1].trim().toUpperCase();
+    }
+
+    switch (inputToUpperCase) {
+
+        // FALLOUT SPECIFIC
+        case 'A':
+        case 'ATTACK':
+            logInput(key, author, player);
+            tapOrRepititiveTapInput(REF.INPUT[accessor].A, modifier);
+            break
+        case 'C':
+        case 'CHARACTER':
+            logInput(key, author, player);
+            tapOrRepititiveTapInput(REF.INPUT[accessor].C, modifier);
+            break
+        case 'I':
+        case 'INVENTORY':
+            logInput(key, author, player);
+            tapOrRepititiveTapInput(REF.INPUT[accessor].I, modifier);
+            break
+        case 'P':
+        case 'PIP':
+        case 'PIPBOY':
+        case 'PIPBOY2000':
+            logInput(key, author, player);
+            tapOrRepititiveTapInput(REF.INPUT[accessor].P, modifier);
+            break
+        case 'Z':
+            logInput(key, author, player);
+            tapOrRepititiveTapInput(REF.INPUT[accessor].Z, modifier);
+            break
+        case 'OPTIONS':
+            logInput(key, author, player);
+            tapOrRepititiveTapInput(REF.INPUT[accessor].O, modifier);
+            break
+        case 'ACTIVE':
+            logInput(key, author, player);
+            tapOrRepititiveTapInput(REF.INPUT[accessor].B, modifier);
+            break
+        case 'TOGGLE_MOUSE':
+            logInput(key, author, player);
+            tapOrRepititiveTapInput(REF.INPUT[accessor].M, modifier);
+            break
+        case 'TOGGLE_ITEM':
+            logInput(key, author, player);
+            tapOrRepititiveTapInput(REF.INPUT[accessor].N, modifier);
+            break
+        case 'S':
+        case 'SKILL':
+        case 'SKILLS':
+        case 'SKILLDEX':
+            logInput(key, author, player);
+            tapOrRepititiveTapInput(REF.INPUT[accessor].S, modifier);
+            break
+        case '1':
+        case 'SNEAK':
+            logInput(key, author, player);
+            tapOrRepititiveTapInput(REF.INPUT[accessor].ONE, modifier);
+            break
+        case '2':
+        case 'LOCK':
+        case 'LOCKPICK':
+        case 'PICK':
+            logInput(key, author, player);
+            tapOrRepititiveTapInput(REF.INPUT[accessor].TWO, modifier);
+            break
+        case '3':
+        case 'STEAL':
+            logInput(key, author, player);
+            tapOrRepititiveTapInput(REF.INPUT[accessor].THREE, modifier);
+            break
+        case '4':
+        case 'TRAP':
+            logInput(key, author, player);
+            tapOrRepititiveTapInput(REF.INPUT[accessor].FOUR, modifier);
+            break
+        case '5':
+        case 'AID':
+        case 'STIM':
+        case 'STIMPACK':
+            logInput(key, author, player);
+            tapOrRepititiveTapInput(REF.INPUT[accessor].FIVE, modifier);
+            break
+        case '6':
+        case 'DR':
+        case 'DOCTOR':
+            logInput(key, author, player);
+            tapOrRepititiveTapInput(REF.INPUT[accessor].SIX, modifier);
+            break
+        case '7':
+        case 'SCIENCE':
+            logInput(key, author, player);
+            tapOrRepititiveTapInput(REF.INPUT[accessor].SEVEN, modifier);
+            break
+        case '8':
+        case 'FIX':
+        case 'REPAIR':
+            logInput(key, author, player);
+            tapOrRepititiveTapInput(REF.INPUT[accessor].EIGHT, modifier);
+            break
+        case '?':
+        case 'TIME':
+        case 'CLOCK':
+            logInput(key, author, player);
+            tapOrRepititiveTapInput(REF.INPUT[accessor].TIME, modifier);
+            break
+        case '<':
+        case 'ROTATE':
+            logInput(key, author, player);
+            tapOrRepititiveTapInput(REF.INPUT[accessor].ROTATE, modifier);
+            break
+        case 'SPACE':
+        case 'END':
+            logInput(key, author, player);
+            tapOrRepititiveTapInput(REF.INPUT[accessor].SPACE, modifier);
+            break
+        case 'ENTER':
+        case 'DONE':
+            logInput(key, author, player);
+            tapOrRepititiveTapInput(REF.INPUT[accessor].ENTER, modifier);
+            break
+        case 'ESC':
+        case 'CLOSE':
+            logInput(key, author, player);
+            tapOrRepititiveTapInput(REF.INPUT[accessor].ESC, modifier);
+            break
+        case 'TAB':
+        case 'MAP':
+            logInput(key, author, player);
+            tapOrRepititiveTapInput(REF.INPUT[accessor].TAB, modifier);
+            break
+        case 'HELP':
+            logInput(key, author, player);
+            tapOrRepititiveTapInput(REF.INPUT[accessor].HELP, modifier);
+            break
+        case 'SAVE':
+            logInput(key, author, player);
+            tapOrRepititiveTapInput(REF.INPUT[accessor].SAVE, modifier);
+            break
+        case 'LOAD':
+            logInput(key, author, player);
+            tapOrRepititiveTapInput(REF.INPUT[accessor].LOAD, modifier);
+            break
+        
+        // MOUSE CURSOR EVENTS
+        case 'MOUSE LEFT':
+        case 'POINTER LEFT':
+        case 'CURSOR LEFT':
+        case 'MOUSELEFT':
+        case 'MSL':
+            logInput(key, author, player);
+            moveMouse({DIR: 'LEFT', PRESCISION: shouldPrecision});
+            break;
+        case 'MOUSE RIGHT':
+        case 'POINTER RIGHT':
+        case 'CURSOR RIGHT':
+        case 'MOUSERIGHT':
+        case 'MSR':
+            logInput(key, author, player);
+            moveMouse({DIR: 'RIGHT', PRESCISION: shouldPrecision});
+            break;
+        case 'MOUSE UP':
+        case 'POINTER UP':
+        case 'CURSOR UP':
+        case 'MOUSEUP':
+        case 'MSU':
+            logInput(key, author, player);
+            moveMouse({DIR: 'UP', PRESCISION: shouldPrecision});
+            break;
+        case 'MOUSE DOWN':
+        case 'POINTER DOWN':
+        case 'CURSOR DOWN':
+        case 'MOUSEDOWN':
+        case 'MSD':
+            logInput(key, author, player);
+            moveMouse({DIR: 'DOWN', PRESCISION: shouldPrecision});
+            break;
+        
+        // MOUSE MOVE EVENTS (RPGs where point & click to move)
+        case 'LEFT':
+        case 'MVL':
+        case 'WEST':
+        case 'MOVE WEST':
+        case 'MOVE LEFT':
+            logInput(key, author, player);
+            moveMouse({DIR: 'LEFT', PRESCISION: shouldPrecision}, 'LCLICK');
+            break;
+        case 'RIGHT':
+        case 'MVR':
+        case 'EAST':
+        case 'MOVE EAST':
+        case 'MOVE RIGHT':
+            logInput(key, author, player);
+            moveMouse({DIR: 'RIGHT', PRESCISION: shouldPrecision}, 'LCLICK');
+            break;
+        case 'UP':
+        case 'MVU':
+        case 'NORTH':
+        case 'MOVE NORTH':
+        case 'MOVE UP':
+            logInput(key, author, player);
+            moveMouse({DIR: 'UP', PRESCISION: shouldPrecision}, 'LCLICK');
+            break;
+        case 'DOWN':
+        case 'MVD':
+        case 'SOUTH':
+        case 'MOVE SOUTH':
+        case 'MOVE DOWN':
+            logInput(key, author, player);
+            moveMouse({DIR: 'DOWN', PRESCISION: shouldPrecision}, 'LCLICK');
+            break;
+        
+        // MOUSE CLICKS
+        case 'LEFT CLICK':
+        case 'L CLICK':
+        case 'LCLICK':
+        case 'LCL':
+            logInput(key, author, player);
+            mouseClick('LCLICK', false);
+            break;
+        case 'RIGHT CLICK':
+        case 'R CLICK':
+        case 'RCLICK':
+        case 'RCL':
+            logInput(key, author, player);
+            mouseClick('RCLICK', false);
+            break;    
+
+        // SCROLL EVENTS
+        case 'SCROLL LEFT':
+        case 'SCRLL':
+            logInput(key, author, player);
+            mouseScroll('HORIZONTAL', 1);
+            break;
+        case 'SCROLL RIGHT':
+        case 'SCRLR':
+            logInput(key, author, player);
+            mouseScroll('HORIZONTAL', -1);
+            break;
+        case 'SCROLL UP':
+        case 'SCRLU':
+            logInput(key, author, player);
+            mouseScroll('VERTICAL', 1);
+            break;
+        case 'SCROLL DOWN':
+        case 'SCRLD':
+            logInput(key, author, player);
+            mouseScroll('VERTICAL', -1);
+            break;
+
+        case 'QUIT-IT':
+        case 'IM-CALLING-MOM':
+        case 'STOP-IT':
+        case 'MOM':
+        case 'MOOOOOOOOOOM':
+            unplugController(player);
+            break;
+        case 'DAD':
+            logInput('ARE YA WINNIN\'? - 👨‍🦳')
+            break;
+        default:
+            break;
+    }
+}
+
 /**
  * Use to debug input functions
  */
 // const sampleInput1 = [
+    // 'esc',
+//     'done',
+//     'tab',
+//     'i'
 //     'DOWN+LEFT+X',
 //     'down+right+x',
 //     'UP15',
@@ -715,7 +744,7 @@ function translateInput(key, author, player) {
 //     sampleInput1.forEach(
 //         (el, i) => {
 //             translateInput(el, 'INPUT-1', 1);
-//             translateInput(sampleInput2[i], 'INPUT-2', 2);
+// //             translateInput(sampleInput2[i], 'INPUT-2', 2);
 //         }
 //     );
 // }, 2000);

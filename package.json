@@ -6,7 +6,8 @@
     "start:yt": "node ws-server.js & cross-env node yt-chat-parser.js",
     "start:twitch": "node ws-server.js & cross-env node twitch-chat-parser.js",
     "start:input-mapper": "node ws-server.js & node input-mapper.js",
-    "stream": "node ws-server.js & cross-env node twitch-chat-parser.js & cross-env node yt-chat-parser.js"
+    "stream": "node ws-server.js & cross-env node twitch-chat-parser.js & cross-env node yt-chat-parser.js",
+    "kill-pid": "kill -9 $(lsof -ti:8070)"
   },
   "repository": {
     "type": "git",
