@@ -326,19 +326,31 @@ function inputMapper(key, modifier, author, player) {
 
     if(key.includes('+')) {
         if (process.env.COMBOS) {
-            comboInput(key.split('+'), author, accessor);
+            try { 
+                comboInput(key.split('+'), author, accessor);
+            } catch (e) {
+                console.log(e);
+            }
         }
 
         key.split('+').forEach(k => queuedInput.push(k));
         queuedInput.forEach(async (e,i) => {
-            await actionKey(e, modifier, author, player);
+            try {
+                await actionKey(e, modifier, author, player);
+            } catch (e) {
+                console.log(e);
+            }
 
         })
 
         queuedInput.length = 0;
     };
 
-    actionKey(key, modifier, author, player);
+    try{
+        actionKey(key, modifier, author, player);
+    } catch (e) {
+        console.log(e);
+    }
 
 }
 
